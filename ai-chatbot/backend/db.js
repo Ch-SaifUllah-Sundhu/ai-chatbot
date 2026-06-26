@@ -1,39 +1,31 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const os = require('os');
+const mongoose = require('mongoose');
 
-// Vercel has a read-only filesystem except for the /tmp directory
-const dbPath = process.env.VERCEL
-  ? path.join(os.tmpdir(), 'chatbot.db')
-  : path.resolve(__dirname, 'chatbot.db');
-
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error connecting to the database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`Error connecting to MongoDB: ${error.message}`);
+    // Don't exit process on Vercel, just log it
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
-});
+};
 
-// Create tables if they don't exist
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
-    )
-  `);
+// Define Schemas
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+}, { timestamps: true });
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS conversations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      userId INTEGER,
-      conversationId TEXT NOT NULL,
-      history TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES users(id)
-    )
-  `);
-});
+const conversationSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  conversationId: { type: String, required: true },
+  history: { type: Array, default: [] } 
+}, { timestamps: true });
 
-module.exports = db;
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', conversationSchema);
+
+module.exports = { connectDB, User, Conversation };

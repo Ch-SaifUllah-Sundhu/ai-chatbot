@@ -1,7 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const os = require('os');
 
-const dbPath = path.resolve(__dirname, 'chatbot.db');
+// Vercel has a read-only filesystem except for the /tmp directory
+const dbPath = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'chatbot.db')
+  : path.resolve(__dirname, 'chatbot.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {

@@ -19,7 +19,11 @@ if (apiKey) {
   genAI = new GoogleGenerativeAI(apiKey);
 }
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, "http://localhost:3000"]
+  : "*";
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Routes

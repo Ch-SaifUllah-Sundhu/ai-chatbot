@@ -153,6 +153,11 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", model: "gemini-2.5-flash", database: "mongodb" });
 });
 
+// Root Route (So Vercel doesn't show 404 when you click the link)
+app.get("/", (req, res) => {
+  res.send("AI Chatbot Backend is running perfectly on Vercel! 🚀");
+});
+
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
